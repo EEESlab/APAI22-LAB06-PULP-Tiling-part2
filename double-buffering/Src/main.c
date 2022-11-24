@@ -75,9 +75,6 @@ void cluster_init()
   l1_layer.layer_dim.x_in  = l1_layer.layer_dim.x_out + WEIGHTS_KERNEL_WIDTH - 1;
   l1_layer.layer_dim.y_in  = l1_layer.layer_dim.y_out + WEIGHTS_KERNEL_HEIGHT - 1;
 
-  /*
-   * PUT YOUR CODE HERE
-   */
 
 #ifdef USE_L1_MEM
   l1_layer.input_data  = pi_l1_malloc(&cluster, (unsigned int)(l1_layer.layer_dim.x_in  * l1_layer.layer_dim.y_in  * l1_layer.layer_dim.c_in * sizeof(unsigned char) * 2));
