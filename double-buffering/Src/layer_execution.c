@@ -120,27 +120,26 @@ void layer_run()
    *    - initialize buffer#1
    *    - run inference on buffer#0
    * 
-   * You can use these functions:
-   *  - void kernel_init(int tileH_idx, int tileW_idx, int tileC, int buffer_idx)   -->  starts DMA transfer (L2->L1) for a specific tile (you can select which one with the indexes)
-   *  - void kernel_run(int buffer_idx)                                             -->  Runs inference for the selected buffer_idx
-   *  - void kernel_end(int tileH_idx, int tileW_idx, int tileC, int buffer_idx)    -->  DMA copies the the output from L1 to L2 memory
-   *  - void kernel_wait()                                                          -->  waits until next DMA interrupt (the interrupt tells you the dma trasnfer has been completed)
+   * Use these functions:
+   *  - void kernel_init(int h_tile_idx, int w_tile_idx, int c_tile_idx, int buffer_idx) -->  starts DMA transfer (L2->L1) for a specific tile (you can select which one with the indexes)
+   *  - void kernel_run(int buffer_idx)                                                  -->  Runs inference for the selected buffer_idx
+   *  - void kernel_end(int h_tile_idx, int w_tile_idx, int c_tile_idx, int buffer_idx)  -->  DMA copies the the output from L1 to L2 memory
+   *  - void kernel_wait()                                                               -->  waits until next DMA interrupt (the interrupt tells you the dma trasnfer has been completed)
    */
+  const int nb_tiles_total = nb_h_tile * nb_w_tile;
   int buffer_idx = 0;
-  int next_w_tile = 0;
-  int next_h_tile = 0;
+
   /*
   * Kernel initialization for tile 0 (outside the for loop)
   */
   /* YOUR CODE HERE */;
 
-  for(h_tile=0; h_tile < nb_h_tile; h_tile++) 
-  {
-    for(w_tile=0; w_tile < nb_w_tile; w_tile++) 
-    {
-
-      buffer_idx += 1;
-      buffer_idx = buffer_idx % 2;
+  for (h_tile_idx = 0; h_tile_idx < nb_h_tile; h_tile_idx++) {
+    for (w_tile_idx = 0; w_tile_idx < nb_w_tile; w_tile_idx++) {
+      const int next_buffer_idx = (buffer_idx + 1) % 2;
+      const int next_w_tile_idx = (w_tile_idx + 1) % nb_w_tile;
+      const int next_h_tile_idx = h_tile_idx + (next_w_tile_idx == 0 ? 1 : 0);  // If the next_w_tile is 0, that means we went into a new row, so the next_h_tile is h_tile + 1
+      const int next_tile_idx = next_h_tile_idx * nb_w_tile + next_w_tile_idx;
 
       /*
        * Kernel wait, until previus DMA transfer has been completed
@@ -150,10 +149,9 @@ void layer_run()
       /*
       * Kernel initialization for the next tile
       */
-      next_w_tile = (w_tile + 1) % nb_w_tile;
-      next_h_tile = h_tile + (next_w_tile == 0 ? 1 : 0);  // If the next_w_tile is 0, that means we went into a new row, so the next_h_tile is h_tile + 1
-      if (( nb_h_tile * h_tile + w_tile ) != ( nb_h_tile * nb_w_tile - 1 ))
+      if (next_tile_idx < nb_total_tiles) { // Check if there exists a 'next' tile
         /* YOUR CODE HERE */;
+      }
 
       /*
        * Executing the main kernel
@@ -168,6 +166,7 @@ void layer_run()
       /* YOUR CODE HERE */;
 
 
+      buffer_idx = next_buffer_idx;
     }
   }
   /*

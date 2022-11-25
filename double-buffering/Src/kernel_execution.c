@@ -36,23 +36,23 @@ void convolution_run(int buffer_idx)
 /*
  * Copy data in L1
  */
-void kernel_init(int  tileH_idx, int  tileW_idx, int  tileC_idx, int buffer_idx)
+void kernel_init(int  h_tile_idx, int  w_tile_idx, int  c_tile_idx, int buffer_idx)
 {
 #if defined(DEBUG)
   printf("---> Entering Kernel Initialization...\n");
 #endif
 
 #ifdef USE_L1_MEM
-  if (tileH_idx == 0 && tileW_idx == 0 && tileC_idx == 0)
+  if (h_tile_idx == 0 && w_tile_idx == 0 && c_tile_idx == 0)
     dory_dma_init();
 
   /** Task 5.2. Tile overlapping
    *
    *  Calculate the tile overlapping and adjust the `network_offset` variable to account for that.
    */
-  const int network_offset =  tileH_idx * l1_layer.layer_dim.y_in * network_layers[0].layer_dim.x_in * network_layers[0].layer_dim.c_in
-      +  tileW_idx * l1_layer.layer_dim.x_in * network_layers[0].layer_dim.c_in
-      +  tileC_idx * l1_layer.layer_dim.c_in;
+  const int network_offset =  h_tile_idx * l1_layer.layer_dim.y_in * network_layers[0].layer_dim.x_in * network_layers[0].layer_dim.c_in
+      +  w_tile_idx * l1_layer.layer_dim.x_in * network_layers[0].layer_dim.c_in
+      +  c_tile_idx * l1_layer.layer_dim.c_in;
   const int ext_stride_1d = network_layers[0].layer_dim.c_in * network_layers[0].layer_dim.x_in;
   const int buffer_size = l1_layer.layer_dim.c_in * l1_layer.layer_dim.x_in * l1_layer.layer_dim.y_in;
   const int double_buffer_offset = buffer_idx * buffer_size;
@@ -92,7 +92,7 @@ void kernel_run(int buffer_idx)
 /*
  * Move back the output results in L2
  */
-void kernel_end(int  tileH_idx, int  tileW_idx, int  tileC_idx, int buffer_idx)
+void kernel_end(int h_tile_idx, int w_tile_idx, int c_tile_idx, int buffer_idx)
 {
 #if defined(DEBUG)
   printf("---> Entering Kernel Ending...\n");
@@ -100,7 +100,7 @@ void kernel_end(int  tileH_idx, int  tileW_idx, int  tileC_idx, int buffer_idx)
 
 #ifdef USE_L1_MEM
   dory_dma_copy copy = {
-    .ext = (void *)(network_layers[0].output_data + (l1_layer.layer_dim.c_out *  tileC_idx) + (network_layers[0].layer_dim.c_out * l1_layer.layer_dim.x_out *  tileW_idx) + (network_layers[0].layer_dim.c_out * network_layers[0].layer_dim.x_out * l1_layer.layer_dim.y_out *  tileH_idx)),
+    .ext = (void *)(network_layers[0].output_data + (l1_layer.layer_dim.c_out *  c_tile_idx) + (network_layers[0].layer_dim.c_out * l1_layer.layer_dim.x_out *  w_tile_idx) + (network_layers[0].layer_dim.c_out * network_layers[0].layer_dim.x_out * l1_layer.layer_dim.y_out *  h_tile_idx)),
     .loc = (void *)l1_layer.output_data + buffer_idx * l1_layer.layer_dim.c_out * l1_layer.layer_dim.x_out * l1_layer.layer_dim.y_out, 
     .stride_2d = 1,  // unused in 2D transfers
     .number_of_2d_copies = 1,  // only 1 2D copy in 2D transfers
