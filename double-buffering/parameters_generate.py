@@ -141,11 +141,11 @@ def clip(x, bits, signed=False):
 
 def create_input(channels, spatial_dim):
     size = (1, channels, spatial_dim, spatial_dim)
-    return torch.randint(low=0, high=100, size=size, dtype=torch.float)
+    return torch.randint(low=0, high=100, size=size, dtype=torch.int32)
 
 def create_weight(channels, kernel_shape):
     size = (channels, channels , kernel_shape, kernel_shape)
-    return torch.randint(low=0, high=5, size=size, dtype=torch.float)
+    return torch.randint(low=0, high=5, size=size, dtype=torch.int32)
 
 def create_layer(channels, spatial_dim, kernel_shape):
     x = create_input(channels, spatial_dim + kernel_shape - 1)
